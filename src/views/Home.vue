@@ -10,7 +10,7 @@
               <label>Balance available</label>
             </div>
             <div id="money">
-              <label id="label-money" @click="test">Click to view balance</label>
+              <label id="label-money">{{saldo}}</label>
             </div>
           </div>
 
@@ -54,8 +54,20 @@ export default {
   name: 'home',
   data () {
     return {
-      total: ''
+      saldo: 0,
+      userUid: []
     }
+  },
+  mounted () {
+    this.userUid = firebase.auth().currentUser.uid
+    firebase.firestore().collection('deposits')
+      .where('userUid', '==', this.userUid).get().then((snapshot) => {
+        snapshot.docs.map(doc => {
+          this.saldo += parseInt(doc.data().quant)
+        })
+      }).catch(error => {
+        throw new Error(error)
+      })
   },
   methods: {
     deposit () {
@@ -66,16 +78,6 @@ export default {
     },
     transfer () {
       this.$router.push({ path: '/transfer' })
-    },
-    test () {
-      let total = 0
-      firebase.firestore().collection('users').get()
-        .then((querySnapshot) => {
-          querySnapshot.forEach((doc) => {
-            total += parseInt(doc.data().valor)
-          })
-          alert('Money: ' + total)
-        })
     },
     logout: function () {
       firebase.auth().signOut().then(() => {
